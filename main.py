@@ -7,46 +7,34 @@ from random import shuffle
 import codecs
 import re
 
-
-def get_text(url):
-    res = requests.get(url)
-    if res.status_code == 200:
-        texts = BeautifulSoup(res.text, 'html.parser').find_all('p')
-        result = ''
-        for text in texts:
-            result += re.sub(r'\s+', ' ', text.text)
-        return result
-    return ''
-
-
 parser = argparse.ArgumentParser()
 parser.add_argument('-l', '--length', help='text length', default=20)
 
 args = parser.parse_args()
 LIMIT = int(args.length)
 
-MAIN_URL = 'https://www.varzesh3.com'
+MAIN_URL = 'https://www.digiato.com'
 res = requests.get(MAIN_URL)
 
 soup = BeautifulSoup(res.text, 'html.parser')
-posts = soup.find_all('li')
+paragraphs = soup.find_all('p')
 
 text = ''
 filename = 'result.txt'
 
 counter = 0
-for post in posts:
+for paragraph in paragraphs:
     if counter < LIMIT:
         try:
-            url = post.find('a')['href']
-            if '/news/' in url and 'live' not in url:
-                text = text + ' ' + get_text(MAIN_URL + url)
-                counter += 1
+            text = text + ' ' + paragraph.text
         except:
             pass
 
 # shuffle list
 text = text.split(' ')
+## add paragraphs
+for _ in range(LIMIT//3):
+    text.append('\n')
 shuffle(text)
 
 # write list in file
@@ -58,10 +46,12 @@ except Exception as e:
 
 new_line_counter = 0
 
-for i in text:
-    if new_line_counter < 200:
-        file.write(i + ' ')
-    else:
-        file.write(i + '\n')
+text = " ".join(text)
+
+try: 
+    file.write(text)
+except Exception as e:
+    print(str(e))
+    sys.exit()
 
 print('Persian Random Text Generated Successfully!\nSee The %s file' % filename)
